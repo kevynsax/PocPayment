@@ -41,7 +41,7 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 
 * Author [**Kevyn Pinheiro Klava**](https://github.com/kevynsax)
 
-See also the list of other [contributors](https://github.com/kevynsax/Poc-Payment/contributors) who participated in this project.
+See also the list of other [contributors](https://github.com/kevynsax/PocPayment/contributors) who participated in this project.
 
 ## License
 

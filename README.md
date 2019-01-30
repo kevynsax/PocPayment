@@ -23,6 +23,7 @@ or
 
 C# .NetCore
 React Js
+PagSeguro
 
 ### Learn More
 

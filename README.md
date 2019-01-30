@@ -10,10 +10,15 @@ This is a POC for test the Payment Request API using React
 ## Getting Started
 
 Clone the repo;
+
 do
+
     open on Visual Studio and run with(F5)
+
 or 
+
     open the folder ClientApp:
+    
     install the dependencies on terminal/CMD with npm install
 
     start the application on terminal/CMD with dotnet run

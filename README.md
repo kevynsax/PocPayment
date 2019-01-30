@@ -18,7 +18,7 @@ do
 or 
 
     open the folder ClientApp:
-    
+
     install the dependencies on terminal/CMD with npm install
 
     start the application on terminal/CMD with dotnet run
@@ -27,7 +27,9 @@ or
 ## Built With
 
 C# .NetCore
+
 React Js
+
 PagSeguro
 
 ### Learn More

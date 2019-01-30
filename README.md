@@ -35,15 +35,13 @@ PagSeguro
 
 ### Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
 To learn React, check out the [React documentation](https://reactjs.org/).
 
 ## Contributors
 
 * Author [**Kevyn Pinheiro Klava**](https://github.com/kevynsax)
 
-See also the list of other [contributors](https://github.com/kevynsax/pocPagSeguro/contributors) who participated in this project.
+See also the list of other [contributors](https://github.com/kevynsax/Poc-Payment/contributors) who participated in this project.
 
 ## License
 

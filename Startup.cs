@@ -46,10 +46,15 @@ namespace pocPagSeguro
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
 
-            app.UseMvc(routes => routes.MapRoute(
+            app.UseMvc(routes => {
+                routes.MapRoute(
                     name: "default",
-                    template: "{controller}/{action=Index}/{id?}")
-            );
+                    template: "{controller}/{action=Index}/{id?}");
+                routes.MapRoute(
+                    name: "apple", 
+                    template:".well-known/apple-developer-merchantid-domain-association.txt",
+                    defaults: new { controller = "teste", action = "index"});
+            });
 
             app.UseSpa(spa =>
             {

@@ -20,6 +20,19 @@
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="localhost.conf" />
+    <None Remove="ClientApp\build\precache-manifest.32ee46a0b803f42d229833ed34bf5cf6.js" />
+    <None Remove="ClientApp\build\service-worker.js" />
+    <None Remove="ClientApp\build\static\css\main.ec4444b3.chunk.css" />
+    <None Remove="ClientApp\build\static\css\main.ec4444b3.chunk.css.map" />
+    <None Remove="ClientApp\build\static\js\1.df099fde.chunk.js" />
+    <None Remove="ClientApp\build\static\js\1.df099fde.chunk.js.map" />
+    <None Remove="ClientApp\build\static\js\main.ec5e4aa4.chunk.js" />
+    <None Remove="ClientApp\build\static\js\main.ec5e4aa4.chunk.js.map" />
+    <None Remove="ClientApp\build\static\js\runtime~main.229c360f.js" />
+    <None Remove="ClientApp\build\static\js\runtime~main.229c360f.js.map" />
+  </ItemGroup>
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
     <!-- Ensure Node.js is installed -->
     <Exec Command="node --version" ContinueOnError="true">
@@ -38,7 +51,7 @@
     <!-- Include the newly-built files in the publish output -->
     <ItemGroup>
       <DistFiles Include="$(SpaRoot)build\**" />
-      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+      <ResolvedFileToPublish Include="@(DistFiles-&gt;'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
         <RelativePath>%(DistFiles.Identity)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>

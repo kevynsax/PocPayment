@@ -4,9 +4,9 @@ import './App.scss';
 
 class App extends Component {
   state = {
-    value: "",
-    emailPagSeguro: "",
-    tokenPagSeguro: "",
+    value: "3.50",
+    emailPagSeguro: "blacknutstribe@gmail.com",
+    tokenPagSeguro: "CCFFC0C4B75449D3B6C5C5F4E48F3483",
     hasAlert: false,
     hasError: false
   }
@@ -15,9 +15,21 @@ class App extends Component {
     const pagSeguro = window.PagSeguroDirectPayment;
 
     const value = parseFloat(this.state.value, 10);
-    const currency = "BRT";
-
-    const methodData = [{ supportedMethods: 'basic-card', data: { supporteNetworks: ['mastercard', 'visa', 'amex'] } }];
+    const currency = "BRL";
+    
+    //not working yet
+    const applePay = {
+      supportedMethods: "https://apple.com/apple-pay",
+      data: {
+          version: 3,
+          merchantIdentifier: "merchant.com.weddings.map",
+          merchantCapabilities: ["supports3DS", "supportsCredit", "supportsDebit"],
+          supportedNetworks: ["amex", "discover", "masterCard", "visa"],
+          countryCode: "BR",
+      },
+    }
+    const basic = { supportedMethods: 'basic-card', data: { supporteNetworks: ['mastercard', 'visa', 'amex'] } };
+    const methodData = [basic, applePay ];
     const details = {
       displayItems: [
         {
@@ -38,16 +50,24 @@ class App extends Component {
     }
 
     var request = new PaymentRequest(methodData, details, options);
+
+    const limparAlerta = () => setTimeout(() => this.setState({hasAlert: false}), 6000);
+    const occursError = (err, callback = () => {}) => {
+      this.setState({ hasAlert: true, hasError: true}, limparAlerta);
+      console.log(err);
+      callback();
+    }
     request.show().then(async response => {
       const { emailPagSeguro, tokenPagSeguro } = this.state;
       const { details, payerEmail, payerName, payerPhone } = response;
       const { cardNumber, cardSecurityCode, cardholderName, expiryMonth, expiryYear, billingAddress } = details;
       const { addressLine, city, country, dependentLocality, organization, postalCode, recipient, region } = billingAddress;
 
-      const limparAlerta = () => setTimeout(() => this.setState({hasAlert: false}), 6000);
 
       var sessionPagSeguro = (await axios.get(`/api/Payments/?email=${emailPagSeguro}&token=${tokenPagSeguro}`)).data;
       pagSeguro.setSessionId(sessionPagSeguro);
+
+      console.log(details);
 
       pagSeguro.getBrand({
         cardBin: cardNumber.substr(0, 6),
@@ -81,17 +101,11 @@ class App extends Component {
             }).then(a => {
               this.setState({hasAlert: true, hasError: false}, limparAlerta)
               response.complete("success");
-            }).catch(err => {
-              this.setState({ hasAlert: true, hasError: true}, limparAlerta);
-              console.log(err);
-              response.complete("fail");
-            });
+            }).catch(err => occursError(err, () => response.complete("fail")));
           }
         })
       })
-    }).catch(err => {
-      console.error(err);
-    })
+    }).catch(err => occursError(err))
   }
 
   render() {

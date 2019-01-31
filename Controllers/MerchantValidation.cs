@@ -37,7 +37,6 @@ namespace pocPagSeguro.Controllers
                             response.EnsureSuccessStatusCode();
 
                             var merchantSessionJson = await response.Content.ReadAsStringAsync();
-                            return merchantSessionJson;
                             return JObject.Parse(merchantSessionJson);
                         }
                     }

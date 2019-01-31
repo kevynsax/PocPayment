@@ -8,31 +8,43 @@ using pocPagSeguro.Model;
 using Newtonsoft.Json;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using Microsoft.Extensions.Logging;
+using System.Security.Authentication;
 
 namespace pocPagSeguro.Controllers
 {
     [Route("api/[controller]")]
     public class MerchantValidationController : Controller
     {
+        private readonly ILogger _logger;
+        public MerchantValidationController(ILogger<MerchantValidationController> logger)
+        {
+            _logger = logger;
+        }
 
         [HttpPost("")]
         public async Task<object> Post([FromBody] MerchantSessionModelView model){
+            _logger.LogInformation($"Solicitado session para a url {model.RequestUrl}, Host: {Request.Host.Host}");
+
             var certificate = GetMerchantCertificate();
+            var extension = certificate.Extensions["1.2.840.113635.100.6.32"];
+            var merchantId = Encoding.ASCII.GetString(extension.RawData).Substring(2);
+
             var validationData = new {
-                merchantIdentifier = model.MerchantId,
-                initiativeContext = Request.Host.Host,
-                initiative = "web",
+                merchantIdentifier = merchantId,
+                domainName = Request.Host.Host,
                 displayName = model.DisplayName
             };
             using (var httpClient = GetSecureHttpClient(certificate))
             {
                 var jsonData = JsonConvert.SerializeObject(validationData);
 
+                _logger.LogInformation($"dados para criar session {jsonData}");
                 using (var content = new StringContent(jsonData, Encoding.UTF8, "application/json"))
                 {
                     try
                     {
-                        using (var response = await httpClient.PostAsync($"https://{model.RequestUrl}/paymentSession", content))
+                        using (var response = await httpClient.PostAsync(model.RequestUrl, content))
                         {
                             response.EnsureSuccessStatusCode();
 
@@ -42,7 +54,8 @@ namespace pocPagSeguro.Controllers
                     }
                     catch (Exception ex)
                     {
-                        throw ex;//new Exception("Apple Pay Gateway error: " + ex.Message);
+                        _logger.LogError("deu erro na hora de criar a sess�o");
+                        throw new Exception("Apple Pay Gateway error: " + ex.Message);
                     }
                 }
             }
@@ -53,7 +66,6 @@ namespace pocPagSeguro.Controllers
             var handler = new HttpClientHandler();
             handler.ClientCertificates.Add(certificate);
             var client = new HttpClient(handler, true);
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             return client;
         }
 

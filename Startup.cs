@@ -56,14 +56,18 @@ namespace pocPagSeguro
                 routes.MapRoute(
                     name: "apple", 
                     template:".well-known/apple-developer-merchantid-domain-association.txt",
-                    defaults: new { controller = "teste", action = "index"});
+                    defaults: new { controller = "teste", action = "apple"});
+                routes.MapRoute(
+                    name: "azureCertificate",
+                    template: ".well-known/pki-validation/godaddy.html",
+                    defaults: new { controller = "teste", action = "azure"});
             });
 
             app.UseSpa(spa =>
             {
                 spa.Options.SourcePath = "ClientApp";
 
-                if (env.IsDevelopment())
+                if (!env.IsDevelopment())
                     spa.UseReactDevelopmentServer(npmScript: "start");
             });
         }

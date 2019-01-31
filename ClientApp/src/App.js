@@ -111,16 +111,16 @@ class App extends Component {
 
     var request = new PaymentRequest(methodData, details, options);
 
-    request.onmerchantvalidation = event => {
+    request.onmerchantvalidation = event =>
       axios.post("/api/MerchantValidation", {
         requestUrl: event.validationURL,
         merchantId: this.merchantId,
-        displayName: "Wedding's Map"
+        displayName: "Weddings Map"
       }).then(response => {
         event.complete(response.data);
         this.setState({ obj: JSON.stringify(response.data) });
       });
-    }
+    
 
     const response = await request.show();
     response.complete("success");
@@ -138,8 +138,8 @@ class App extends Component {
   }
 
   handleClick = async () => {
-    if(window.ApplePaySession)
-      alert("tem apple pay");
+    // if(window.ApplePaySession)
+    //   alert("tem apple pay");
     await this.requestPaymentApi();
   }
 

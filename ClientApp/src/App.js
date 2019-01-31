@@ -8,28 +8,88 @@ class App extends Component {
     emailPagSeguro: "blacknutstribe@gmail.com",
     tokenPagSeguro: "CCFFC0C4B75449D3B6C5C5F4E48F3483",
     hasAlert: false,
-    hasError: false
+    hasError: false,
+    obj: ""
+  }
+  merchantId = "merchant.com.weddings.map";
+
+  limparAlerta = () => setTimeout(() => this.setState({ hasAlert: false }), 6000);
+  occursError = (err, callback = () => { }) => {
+    this.setState({ hasAlert: true, hasError: true }, this.limparAlerta);
+    console.log(err);
+    callback();
   }
 
-  handleClick = () => {
+  makePayment = async (data, completeSuccess, completeError ) => {
+    const value = parseFloat(this.state.value, 10);
+    const { emailPagSeguro, tokenPagSeguro } = this.state;
+
+    const urlPayment = "/api/Payments/";
     const pagSeguro = window.PagSeguroDirectPayment;
+    const { payerEmail, payerName, payerPhone, cardNumber, cardSecurityCode, cardholderName, expiryMonth, expiryYear, billingAddress} = data;
+    const { addressLine, city, country, dependentLocality, organization, postalCode, recipient, region } = billingAddress;
+
+    var sessionPagSeguro = (await axios.get(`${urlPayment}?email=${emailPagSeguro}&token=${tokenPagSeguro}`)).data;
+    pagSeguro.setSessionId(sessionPagSeguro);
+
+    pagSeguro.getBrand({
+      cardBin: cardNumber.substr(0, 6),
+      success: ({ brand }) => pagSeguro.createCardToken({
+        cardNumber,
+        brand: brand.name,
+        cvv: cardSecurityCode,
+        expirationMonth: expiryMonth,
+        expirationYear: expiryYear,
+        success: ({ card }) => {
+          axios.post(urlPayment, {
+            emailPagSeguro,
+            tokenPagSeguro,
+            email: payerEmail,
+            name: payerName,
+            phone: payerPhone,
+            hashCLient: pagSeguro.getSenderHash(),
+            cardToken: card.token,
+            cardholderName,
+            value,
+            billingAddress: {
+              address: addressLine.join(""),
+              city,
+              country,
+              neighbour: dependentLocality,
+              type: organization,
+              postalCode,
+              nameBilling: recipient,
+              stateCode: region
+            }
+          }).then(a => {
+            this.setState({ hasAlert: true, hasError: false }, this.limparAlerta);
+            completeSuccess();
+            ;
+          }).catch(err => this.occursError(err, completeError));
+        }
+      })
+    })
+  }
+
+  requestPaymentApi = async () => {
 
     const value = parseFloat(this.state.value, 10);
     const currency = "BRL";
-    
+    const supportedNetworks = ['mastercard', 'visa', 'amex'];
+
     //not working yet
     const applePay = {
       supportedMethods: "https://apple.com/apple-pay",
       data: {
-          version: 3,
-          merchantIdentifier: "merchant.com.weddings.map",
-          merchantCapabilities: ["supports3DS", "supportsCredit", "supportsDebit"],
-          supportedNetworks: ["amex", "discover", "masterCard", "visa"],
-          countryCode: "BR",
+        version: 3,
+        merchantIdentifier: this.merchantId,
+        merchantCapabilities: ["supportsCredit"],
+        supportedNetworks,
+        countryCode: "BR",
       },
     }
-    const basic = { supportedMethods: 'basic-card', data: { supporteNetworks: ['mastercard', 'visa', 'amex'] } };
-    const methodData = [basic, applePay ];
+    const basic = { supportedMethods: 'basic-card', data: { supportedNetworks } };
+    const methodData = [basic, applePay];
     const details = {
       displayItems: [
         {
@@ -51,71 +111,47 @@ class App extends Component {
 
     var request = new PaymentRequest(methodData, details, options);
 
-    const limparAlerta = () => setTimeout(() => this.setState({hasAlert: false}), 6000);
-    const occursError = (err, callback = () => {}) => {
-      this.setState({ hasAlert: true, hasError: true}, limparAlerta);
-      console.log(err);
-      callback();
+    request.onmerchantvalidation = event => {
+      axios.post("/api/MerchantValidation", {
+        requestUrl: event.validationURL,
+        merchantId: this.merchantId,
+        displayName: "Wedding's Map"
+      }).then(response => {
+        event.complete(response.data);
+        this.setState({ obj: JSON.stringify(response.data) });
+      });
     }
+
+    const response = await request.show();
+    response.complete("success");
+
     request.show().then(async response => {
-      const { emailPagSeguro, tokenPagSeguro } = this.state;
       const { details, payerEmail, payerName, payerPhone } = response;
       const { cardNumber, cardSecurityCode, cardholderName, expiryMonth, expiryYear, billingAddress } = details;
-      const { addressLine, city, country, dependentLocality, organization, postalCode, recipient, region } = billingAddress;
 
+      console.log(response, details);
 
-      var sessionPagSeguro = (await axios.get(`/api/Payments/?email=${emailPagSeguro}&token=${tokenPagSeguro}`)).data;
-      pagSeguro.setSessionId(sessionPagSeguro);
+      const data = { payerEmail, payerName, payerPhone, cardNumber, cardSecurityCode, cardholderName, expiryMonth, expiryYear, billingAddress }
+      this.makePayment(data, () => response.complete("success"), () => response.complete("fail"));
 
-      console.log(details);
+    }).catch(err => this.occursError(err))
+  }
 
-      pagSeguro.getBrand({
-        cardBin: cardNumber.substr(0, 6),
-        success: ({ brand }) => pagSeguro.createCardToken({
-          cardNumber,
-          brand: brand.name,
-          cvv: cardSecurityCode,
-          expirationMonth: expiryMonth,
-          expirationYear: expiryYear,
-          success: ({ card }) => {
-            axios.post(`/api/Payments`, {
-              emailPagSeguro,
-              tokenPagSeguro,
-              email: payerEmail,
-              name: payerName,
-              phone: payerPhone,
-              hashCLient: pagSeguro.getSenderHash(),
-              cardToken: card.token,
-              cardholderName,
-              value,
-              billingAddress: {
-                address: addressLine.join(""),
-                city,
-                country,
-                neighbour: dependentLocality,
-                type: organization,
-                postalCode,
-                nameBilling: recipient,
-                stateCode: region
-              }
-            }).then(a => {
-              this.setState({hasAlert: true, hasError: false}, limparAlerta)
-              response.complete("success");
-            }).catch(err => occursError(err, () => response.complete("fail")));
-          }
-        })
-      })
-    }).catch(err => occursError(err))
+  handleClick = async () => {
+    if(window.ApplePaySession)
+      alert("tem apple pay");
+    await this.requestPaymentApi();
   }
 
   render() {
     const { emailPagSeguro, tokenPagSeguro } = this.state;
-    const { value, hasError, hasAlert } = this.state;
+    const { value, hasError, hasAlert, obj } = this.state;
 
     const msg = hasError ? "Erro na hora de realizar o pagamento" : "Pagamento feito com sucesso";
     const clas = `alert ${hasError ? "error" : "success"}`;
     return (
       <div className="app">
+        <div className={alert}>{obj}</div>
         {hasAlert && (
           <div className={clas}>{msg}</div>
         )}

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,6 +33,8 @@ namespace pocPagSeguro
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            var opt = new RewriteOptions().AddRedirectToHttpsPermanent();
+            app.UseRewriter(opt);
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
